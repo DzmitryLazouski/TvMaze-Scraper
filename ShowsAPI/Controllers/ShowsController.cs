@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using ShowsAPI.Models;
 using ShowsAPI.Pagination;
 using ShowsAPI.Persistence;
 using StackExchange.Redis;
@@ -12,7 +14,7 @@ using StackExchange.Redis;
 namespace ShowsAPI.Controllers
 {
     [Route("api/[controller]")]
-    public class ShowsController : Controller
+    public class ShowsController : ControllerBase
     {
         private readonly ILogger _logger;
         private readonly IShowsRepository _showsRepository;
@@ -60,12 +62,17 @@ namespace ShowsAPI.Controllers
             HttpContext?.Response.Headers.Add("Paging-Headers",
                 JsonConvert.SerializeObject(paginationParameterModel.GetPaginationMetadata(showsCount)));
 
+            OrderCastByBirthdayDesc(showItems);
+
+            return Ok(showItems);
+        }
+
+        private static void OrderCastByBirthdayDesc(IEnumerable<Show> showItems)
+        {
             foreach (var showItem in showItems)
             {
                 showItem.Cast = showItem.Cast.OrderByDescending(c => c.Birthday).ToList();
             }
-
-            return Ok(showItems);
         }
     }
 }
