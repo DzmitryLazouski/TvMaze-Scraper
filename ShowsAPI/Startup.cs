@@ -1,17 +1,13 @@
-﻿using System;
-using System.IO;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using NLog;
 using ShowsAPI.Contexts;
 using ShowsAPI.Extensions;
-using ShowsAPI.Logging;
-using ShowsAPI.Models;
 using ShowsAPI.Persistence;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -19,10 +15,11 @@ namespace ShowsAPI
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly ILogger _logger;
+        public Startup(IConfiguration configuration, ILoggerFactory logerFactory)
         {
-            LogManager.EnableLogging();
             Configuration = configuration;
+            _logger = logerFactory.CreateLogger<Startup>();
         }
 
         public IConfiguration Configuration { get; }
@@ -35,7 +32,7 @@ namespace ShowsAPI
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
 
-            services.AddSingleton<ILoggerManager, LoggerManager>();
+            services.AddLogging();
 
             services.AddDbContext<ShowsContext>(x => x.UseSqlServer(Configuration.GetConnectionString("ShowsDatabase")));
 
@@ -48,14 +45,14 @@ namespace ShowsAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerManager logger)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            app.ConfigureExceptionHandler(logger);
+            app.ConfigureExceptionHandler(_logger);
 
             app.UseMvc();
 

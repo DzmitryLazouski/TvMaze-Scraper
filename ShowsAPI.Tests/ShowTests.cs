@@ -3,11 +3,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
-using NLog;
 using NUnit.Framework;
 using ShowsAPI.Controllers;
-using ShowsAPI.Logging;
 using ShowsAPI.Models;
 using ShowsAPI.Pagination;
 using ShowsAPI.Persistence;
@@ -18,12 +17,11 @@ namespace ShowsAPI.Tests
     {
         private const string ApiUrl = "http://show.azurewebsites.net/api/shows";
         private static readonly HttpClient Client = new HttpClient();
-        private Logger _log;
+        private readonly ILogger _logger;
 
-        [OneTimeSetUp]
-        public void ShowTestsSetUp()
+        public ShowTests(ILogger logger)
         {
-            _log = LogManager.GetCurrentClassLogger();
+            _logger = logger;
         }
 
         private List<Show> GetShows()
@@ -76,7 +74,7 @@ namespace ShowsAPI.Tests
             // Arrange
             var mockRepo = new Mock<IShowsRepository>();
             mockRepo.Setup(repo => repo.GetAll()).Returns(GetShows().AsQueryable());
-            var controller = new ShowsController(mockRepo.Object, new LoggerManager());
+            var controller = new ShowsController(mockRepo.Object, _logger);
             var paginationParameter = new PaginationParameterModel { PageNumber = 1, PageSize = 2 };
 
             // Act
