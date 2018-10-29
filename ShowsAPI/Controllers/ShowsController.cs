@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Formatting;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -59,7 +60,7 @@ namespace ShowsAPI.Controllers
                 _logger.LogInformation($"Number of shows = {showsCount} from Redis.");
             }
 
-            HttpContext?.Response.Headers.Add("Paging-Headers",
+            HttpContext?.Response.Headers.Add("Paging-Headers", 
                 JsonConvert.SerializeObject(paginationParameterModel.GetPaginationMetadata(showsCount)));
 
             OrderCastByBirthdayDesc(showItems);

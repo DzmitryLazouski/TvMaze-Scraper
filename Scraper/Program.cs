@@ -5,11 +5,13 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Net;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Scraper.Contexts;
-using Scraper.Models;
 using Scraper.Serialization;
 using Microsoft.Extensions.DependencyInjection;
+using Scraper.Data.Entities;
+
 
 namespace Scraper
 {
@@ -22,6 +24,7 @@ namespace Scraper
         {
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
+                .AddAutoMapper()
                 .BuildServiceProvider();
 
             serviceProvider
@@ -141,17 +144,17 @@ namespace Scraper
             {
                 try
                 {
-                    var castJson = await DownloadCast(show.id);
+                    var castJson = await DownloadCast(show.Id);
                     var castDataList = JsonConvert.DeserializeObject<List<CastData>>(castJson);
                     foreach (var item in castDataList)
                     {
-                        item.ShowId = show.id;
+                        item.ShowId = show.Id;
                     }
                     fullCastList.AddRange(castDataList);
                 }
                 catch(Exception ex)
                 {
-                    logger.LogError(ex, $"Error while downloading cast for show with Id = {show.id}");
+                    logger.LogError(ex, $"Error while downloading cast for show with Id = {show.Id}");
                 }
             }
 
@@ -183,31 +186,31 @@ namespace Scraper
             var peopleList = new List<Person>();
             foreach (var showData in showDataList)
             {
-                if(string.IsNullOrEmpty(showData.id)) continue;
+                if(string.IsNullOrEmpty(showData.Id)) continue;
 
-                var personDataList = castDataList.Where(x => x.ShowId == showData.id).Select(x => x.Person).ToList();
+                var personDataList = castDataList.Where(x => x.ShowId == showData.Id).Select(x => x.Person).ToList();
                 var people = personDataList
                     .Select(x => new Person
                     {
-                        Id = int.Parse(x.id),
-                        Name = x.name,
-                        Birthday = x.birthday,
-                        ShowId = int.Parse(showData.id)
+                        Id = int.Parse(x.Id),
+                        Name = x.Name,
+                        Birthday = x.Birthday,
+                        ShowId = int.Parse(showData.Id)
                     }).ToList();
 
                 peopleList.AddRange(people);
 
                 var show = new Show
                 {
-                    Id = int.Parse(showData.id),
-                    Name = showData.name
+                    Id = int.Parse(showData.Id),
+                    Name = showData.Name
                 };
                 shows.Add(show);
             }
             return (shows, peopleList);
         }
 
-        private static async Task SaveShows(List<Show> shows)
+        private static async Task SaveShows(IEnumerable<Show> shows)
         {
             using (var db = new ShowsContext())
             {
@@ -216,7 +219,7 @@ namespace Scraper
             }
         }
 
-        private static async Task SavePeople(List<Person> peopleList)
+        private static async Task SavePeople(IEnumerable<Person> peopleList)
         {
             foreach (var item in peopleList)
             {

@@ -20,8 +20,8 @@
             var pageSize = PageSize;
             var totalCount = showsCount;
             var totalPages = (showsCount + pageSize - 1) / pageSize;
-            var hasPreviousPage = currentPage > 1 ? "Yes" : "No";
-            var hasNextPage = currentPage < totalPages ? "Yes" : "No";
+            var hasPreviousPage = currentPage > 1;
+            var hasNextPage = currentPage < totalPages;
 
             return new PaginationMetadata
             {

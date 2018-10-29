@@ -1,8 +1,12 @@
-﻿namespace Scraper.Serialization
+﻿using Newtonsoft.Json;
+
+namespace Scraper.Serialization
 {
     public class ShowData
     {
-        public string id { get; set; }
-        public string name { get; set; }
+        [JsonProperty(PropertyName = "id")]
+        public string Id { get; set; }
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
     }
 }
