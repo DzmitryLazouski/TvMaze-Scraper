@@ -28,7 +28,7 @@ namespace Scraper
                     maxShowId = context.Show.Max(s => s.Id);
                 }
 
-                for (var i = maxShowId + 1; NotFoundCount <= 10; i += batchSize)
+                for (var i = maxShowId + 1; NotFoundCount != 10; i += batchSize)
                 {
                     var showList = await DownloadShows(i, i + batchSize);
                     var showDataList = DeserializeShows(showList);
