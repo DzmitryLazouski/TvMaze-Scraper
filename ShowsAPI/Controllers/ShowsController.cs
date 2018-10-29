@@ -62,6 +62,11 @@ namespace ShowsAPI.Controllers
             HttpContext?.Response.Headers.Add("Paging-Headers",
                 JsonConvert.SerializeObject(paginationParameterModel.GetPaginationMetadata(showsCount)));
 
+            foreach (var showItem in showItems)
+            {
+                showItem.Cast = showItem.Cast.OrderByDescending(c => c.Birthday).ToList();
+            }
+
             return Ok(showItems);
         }
 
