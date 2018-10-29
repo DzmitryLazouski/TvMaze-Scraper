@@ -2,7 +2,7 @@
 
 https://show.azurewebsites.net/api/shows
 
-https://show.azurewebsites.net/api/shows?&pageNumber=10&pageSize=2
+https://show.azurewebsites.net/api/shows?pageNumber=10&pageSize=2
 
 https://showsdocker.azurewebsites.net/api/shows
 
