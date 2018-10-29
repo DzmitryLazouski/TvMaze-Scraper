@@ -5,21 +5,34 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Net;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Scraper.Contexts;
 using Scraper.Models;
 using Scraper.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Scraper
 {
     class Program
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly HttpClient Client = new HttpClient();
         public static int NotFoundCount { get; set; }
 
         static async Task Main()
         {
+            var serviceProvider = new ServiceCollection()
+                .AddLogging()
+                .BuildServiceProvider();
+
+            serviceProvider
+                .GetService<ILoggerFactory>()
+                .AddConsole(LogLevel.Debug);
+
+            var logger = serviceProvider.GetService<ILoggerFactory>()
+                .CreateLogger<Program>();
+
+            logger.LogDebug("Start");
+
             try
             {
                 const int batchSize = 1000;
@@ -31,9 +44,9 @@ namespace Scraper
 
                 for (var i = maxShowId + 1; NotFoundCount != 10; i += batchSize)
                 {
-                    var showList = await DownloadShows(i, i + batchSize);
+                    var showList = await DownloadShows(i, i + batchSize, logger);
                     var showDataList = DeserializeShows(showList);
-                    var castDataList = await DeserializeCasts(showDataList);
+                    var castDataList = await DeserializeCasts(showDataList, logger);
                     var (shows, people) = GetShowsInfo(showDataList, castDataList);
 
                     if (shows.Count > 0)
@@ -50,12 +63,12 @@ namespace Scraper
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                Logger.Error(ex.Message);
-                Logger.Error(ex.StackTrace);
+                logger.LogError(ex.Message);
+                logger.LogError(ex.StackTrace);
             }
         }
 
-        private static async Task<List<string>> DownloadShows(int startShowId, int endShowId)
+        private static async Task<List<string>> DownloadShows(int startShowId, int endShowId, ILogger logger)
         {
             NotFoundCount = 0;
             var showList = new List<string>();
@@ -69,7 +82,7 @@ namespace Scraper
                     {
                         var showUrl = $"http://api.tvmaze.com/shows/{showId}";
                         Console.WriteLine(showUrl);
-                        Logger.Info(showUrl);
+                        logger.LogInformation(showUrl);
 
                         var result = await Client.GetAsync(showUrl);
 
@@ -99,11 +112,11 @@ namespace Scraper
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(ex, $"Error while downloading show with Id = {i}.");
+                    logger.LogError(ex, $"Error while downloading show with Id = {i}.");
                 }
             }
 
-            Logger.Info($"{showList.Count} show(s) downloaded.");
+            logger.LogInformation($"{showList.Count} show(s) downloaded.");
             return showList;
         }
 
@@ -120,7 +133,7 @@ namespace Scraper
             return showObjList;
         }
 
-        private static async Task<List<CastData>> DeserializeCasts(List<ShowData> showsData)
+        private static async Task<List<CastData>> DeserializeCasts(List<ShowData> showsData, ILogger logger)
         {
             var fullCastList = new List<CastData>();
 
@@ -138,7 +151,7 @@ namespace Scraper
                 }
                 catch(Exception ex)
                 {
-                    Logger.Error(ex, $"Error while downloading cast for show with Id = {show.id}");
+                    logger.LogError(ex, $"Error while downloading cast for show with Id = {show.id}");
                 }
             }
 
