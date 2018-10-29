@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace Scraper
+﻿namespace Scraper.Serialization
 {
     public class PersonData
     {

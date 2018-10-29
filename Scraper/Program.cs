@@ -8,6 +8,7 @@ using System.Net;
 using NLog;
 using Scraper.Contexts;
 using Scraper.Models;
+using Scraper.Serialization;
 
 namespace Scraper
 {

@@ -18,13 +18,13 @@ namespace ShowsAPI.Controllers
     {
         private readonly ILoggerManager _logger;
         private readonly IShowsRepository _showsRepository;
-        private IDatabase cache;
+        private readonly IDatabase _cache;
 
         public ShowsController(IShowsRepository showsRepository, ILoggerManager logger)
         {
             _logger = logger;
             _showsRepository = showsRepository;
-            cache = Program.Connection.GetDatabase();
+            _cache = Program.Connection.GetDatabase();
         }
         // GET: api/<controller>
         [HttpGet]
@@ -45,13 +45,13 @@ namespace ShowsAPI.Controllers
             }
 
             var key = $"ShowsCount on {DateTime.Now.ToShortDateString()}";
-            var showsCountString = await cache.StringGetAsync(key).ConfigureAwait(false);
+            var showsCountString = await _cache.StringGetAsync(key);
             int showsCount;
             if (string.IsNullOrEmpty(showsCountString))
             {
                 showsCount = await shows.CountAsync();
                 _logger.LogInfo($"There are {showsCount} shows in db.");
-                await cache.StringSetAsync(key, showsCount).ConfigureAwait(false);
+                await _cache.StringSetAsync(key, showsCount);
             }
             else
             {
@@ -76,7 +76,7 @@ namespace ShowsAPI.Controllers
         {
             var key = $"MyEntity:{id}";
 
-            var json = await cache.StringGetAsync(key).ConfigureAwait(false);
+            var json = await _cache.StringGetAsync(key).ConfigureAwait(false);
             var show = string.IsNullOrWhiteSpace(json)
                 ? default(Show)
                 : JsonConvert.DeserializeObject<Show>(json);
@@ -91,8 +91,8 @@ namespace ShowsAPI.Controllers
                 }
                 show.Cast = show.Cast.OrderByDescending(c => c.Birthday).ToList();
 
-                await cache.StringSetAsync(key, JsonConvert.SerializeObject(show)).ConfigureAwait(false);
-                await cache.KeyExpireAsync(key, TimeSpan.FromMinutes(5)).ConfigureAwait(false);
+                await _cache.StringSetAsync(key, JsonConvert.SerializeObject(show));
+                await _cache.KeyExpireAsync(key, TimeSpan.FromMinutes(5));
             }
 
             return Ok(show);

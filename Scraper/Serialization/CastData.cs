@@ -1,9 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Scraper
+namespace Scraper.Serialization
 {
     public class CastData
     {
