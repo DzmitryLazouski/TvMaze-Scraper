@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +34,8 @@ namespace ShowsAPI
                 });
 
             services.AddLogging();
+
+            services.AddAutoMapper();
 
             services.AddDbContext<ShowsContext>(x => x.UseSqlServer(Configuration.GetConnectionString("ShowsDatabase")));
 

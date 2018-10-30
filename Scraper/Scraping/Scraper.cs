@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Scraper.Contexts;
+using Scraper.Data.DTO;
 using Scraper.Data.Entities;
-using Scraper.Serialization;
 
 namespace Scraper.Scraping
 {
@@ -113,29 +113,30 @@ namespace Scraper.Scraping
             return showList;
         }
 
-        private List<ShowData> DeserializeShows(List<string> showsJson)
+        private List<ShowDto> DeserializeShows(List<string> showsJson)
         {
-            var showObjList = new List<ShowData>();
+            var showObjList = new List<ShowDto>();
 
             foreach (var showJson in showsJson.ToList())
             {
-                var showObj = JsonConvert.DeserializeObject<ShowData>(showJson);
+                var showObj = JsonConvert.DeserializeObject<ShowDto>(showJson);
                 showObjList.Add(showObj);
             }
 
             return showObjList;
         }
 
-        private async Task<List<CastData>> DeserializeCasts(List<ShowData> showsData)
+
+        private async Task<List<CastDto>> DeserializeCasts(List<ShowDto> showsData)
         {
-            var fullCastList = new List<CastData>();
+            var fullCastList = new List<CastDto>();
 
             foreach (var show in showsData)
             {
                 try
                 {
                     var castJson = await DownloadCast(show.Id);
-                    var castDataList = JsonConvert.DeserializeObject<List<CastData>>(castJson);
+                    var castDataList = JsonConvert.DeserializeObject<List<CastDto>>(castJson);
                     foreach (var item in castDataList)
                     {
                         item.ShowId = show.Id;
@@ -170,7 +171,7 @@ namespace Scraper.Scraping
             return cast;
         }
 
-        private static (List<Show> shows, List<Person> people) GetShowsInfo(List<ShowData> showDataList, List<CastData> castDataList)
+        private static (List<Show> shows, List<Person> people) GetShowsInfo(List<ShowDto> showDataList, List<CastDto> castDataList)
         {
             var shows = new List<Show>();
             var peopleList = new List<Person>();

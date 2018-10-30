@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Scraper.Data.Entities;
 using ShowsAPI.Contexts;
-using ShowsAPI.Models;
 
 namespace ShowsAPI.Persistence
 {

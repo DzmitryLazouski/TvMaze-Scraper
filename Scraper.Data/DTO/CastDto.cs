@@ -1,7 +1,8 @@
 ﻿namespace Scraper.Data.DTO
 {
-    class CastDto
+    public class CastDto
     {
+        public string ShowId { get; set; }
         public PersonDto Person { get; set; }
     }
 }

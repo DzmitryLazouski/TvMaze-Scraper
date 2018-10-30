@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Formatting;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using ShowsAPI.Models;
+using Scraper.Data.Entities;
+using Scraper.Data.Models;
 using ShowsAPI.Pagination;
 using ShowsAPI.Persistence;
 using StackExchange.Redis;
@@ -20,12 +21,14 @@ namespace ShowsAPI.Controllers
         private readonly ILogger _logger;
         private readonly IShowsRepository _showsRepository;
         private readonly IDatabase _cache;
+        private readonly IMapper _mapper;
 
-        public ShowsController(IShowsRepository showsRepository, ILogger<ShowsController> logger)
+        public ShowsController(IShowsRepository showsRepository, ILogger<ShowsController> logger, IMapper mapper)
         {
             _logger = logger;
             _showsRepository = showsRepository;
             _cache = Program.Connection.GetDatabase();
+            _mapper = mapper;
         }
         // GET: api/<controller>
         [HttpGet]
@@ -60,12 +63,12 @@ namespace ShowsAPI.Controllers
                 _logger.LogInformation($"Number of shows = {showsCount} from Redis.");
             }
 
-            HttpContext?.Response.Headers.Add("Paging-Headers", 
+            HttpContext?.Response.Headers.Add("Paging-Headers",
                 JsonConvert.SerializeObject(paginationParameterModel.GetPaginationMetadata(showsCount)));
 
             OrderCastByBirthdayDesc(showItems);
 
-            return Ok(showItems);
+            return Ok(_mapper.Map<List<Show>, List<ShowModel>>(showItems));
         }
 
         private static void OrderCastByBirthdayDesc(IEnumerable<Show> showItems)

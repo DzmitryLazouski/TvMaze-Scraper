@@ -1,6 +1,4 @@
-﻿using System.Net.Http;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Scraper.Scraping;
@@ -14,7 +12,6 @@ namespace Scraper
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddSingleton<IScraper, Scraping.Scraper>()
-                .AddAutoMapper()
                 .AddHttpClient()
                 .BuildServiceProvider();
 
@@ -29,6 +26,8 @@ namespace Scraper
 
             var scraper = serviceProvider.GetService<IScraper>();
             await scraper.Scrape();
+
+            logger.LogDebug("Finish");
         }
     }
 }

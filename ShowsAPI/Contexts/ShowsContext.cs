@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
-using ShowsAPI.Models;
+using Scraper.Data.Entities;
 
 namespace ShowsAPI.Contexts
 {

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Scraper.Data.Entities;
 using ShowsAPI.Controllers;
 using ShowsAPI.Models;
 using ShowsAPI.Pagination;
@@ -74,7 +75,7 @@ namespace ShowsAPI.Tests
             // Arrange
             var mockRepo = new Mock<IShowsRepository>();
             mockRepo.Setup(repo => repo.GetAll()).Returns(GetShows().AsQueryable());
-            var controller = new ShowsController(mockRepo.Object, _logger);
+            var controller = new ShowsController(mockRepo.Object, _logger, null);
             var paginationParameter = new PaginationParameterModel { PageNumber = 1, PageSize = 2 };
 
             // Act

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using ShowsAPI.Models;
+using Scraper.Data.Entities;
 
 
 namespace ShowsAPI.Persistence
