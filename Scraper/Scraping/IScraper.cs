@@ -4,7 +4,7 @@ namespace Scraper.Scraping
 {
     public interface IScraper
     {
-        Task Scrape();
+        Task ScrapeAsync();
     }
 
 }

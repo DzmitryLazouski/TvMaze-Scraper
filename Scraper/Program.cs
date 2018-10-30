@@ -31,7 +31,7 @@ namespace Scraper
                 .AddConsole(LogLevel.Debug);
 
             var scraper = serviceProvider.GetService<IScraper>();
-            await scraper.Scrape();
+            await scraper.ScrapeAsync();
         }
     }
 }

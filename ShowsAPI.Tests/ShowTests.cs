@@ -8,7 +8,6 @@ using Moq;
 using NUnit.Framework;
 using Scraper.Data.Entities;
 using ShowsAPI.Controllers;
-using ShowsAPI.Pagination;
 using ShowsAPI.Persistence;
 
 namespace ShowsAPI.Tests
@@ -75,10 +74,9 @@ namespace ShowsAPI.Tests
             var mockRepo = new Mock<IShowsRepository>();
             mockRepo.Setup(repo => repo.GetAll()).Returns(GetShows().AsQueryable());
             var controller = new ShowsController(mockRepo.Object, _logger, null);
-            var paginationParameter = new PaginationParameterModel { PageNumber = 1, PageSize = 2 };
 
             // Act
-            var result = await controller.Get(paginationParameter);
+            var result = await controller.Get();
 
             //Assert
             Assert.IsInstanceOf<OkObjectResult>(result);

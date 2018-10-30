@@ -29,7 +29,7 @@ namespace Scraper.Scraping
             _scraperSettings = scraperSettings.GetScraperSettings();
         }
 
-        public async Task Scrape()
+        public async Task ScrapeAsync()
         {
             try
             {
@@ -38,9 +38,9 @@ namespace Scraper.Scraping
                 while(_notFoundErrorrsCount < _scraperSettings.MaxNotFoundErrorsBeforeBreak)
                 {
                     var currentShowId = maxShowId + 1;
-                    var showList = await DownloadShows(currentShowId, currentShowId + _scraperSettings.BatchSize);
+                    var showList = await DownloadShowsAsync(currentShowId, currentShowId + _scraperSettings.BatchSize);
                     var showDataList = DeserializeShows(showList);
-                    var castDataList = await DeserializeCasts(showDataList);
+                    var castDataList = await DeserializeCastsAsync(showDataList);
                     var (shows, people) = GetShowsInfo(showDataList, castDataList);
 
                     if (shows.Count > 0)
@@ -61,7 +61,7 @@ namespace Scraper.Scraping
             }
         }
 
-        private async Task<List<string>> DownloadShows(int startShowId, int endShowId)
+        private async Task<List<string>> DownloadShowsAsync(int startShowId, int endShowId)
         {
             _logger.LogInformation("Start Downloading Shows");
             _notFoundErrorrsCount = 0;
@@ -129,7 +129,7 @@ namespace Scraper.Scraping
             return showObjList;
         }
 
-        private async Task<List<CastDto>> DeserializeCasts(IEnumerable<ShowDto> showsData)
+        private async Task<List<CastDto>> DeserializeCastsAsync(IEnumerable<ShowDto> showsData)
         {
             var fullCastList = new List<CastDto>();
 
@@ -137,7 +137,7 @@ namespace Scraper.Scraping
             {
                 try
                 {
-                    var castJson = await DownloadCast(show.Id);
+                    var castJson = await DownloadCastAsync(show.Id);
                     var castDataList = JsonConvert.DeserializeObject<List<CastDto>>(castJson);
                     foreach (var item in castDataList)
                     {
@@ -154,7 +154,7 @@ namespace Scraper.Scraping
             return fullCastList;
         }
 
-        private async Task<string> DownloadCast(string id)
+        private async Task<string> DownloadCastAsync(string id)
         {
             _logger.LogInformation("Start Downloading Cast");
             var castUrl = GetCastUrl(id);
