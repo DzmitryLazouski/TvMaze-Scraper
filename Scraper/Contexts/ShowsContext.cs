@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.IO;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Scraper.Data.Entities;
@@ -23,11 +25,16 @@ namespace Scraper.Contexts
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            var configuration = builder.Build();
+
             optionsBuilder.EnableSensitiveDataLogging();
             optionsBuilder
                 .UseLoggerFactory(MyConsoleLoggerFactory)
-                .UseSqlServer(
-                    "Server=tcp:showsserver.database.windows.net,1433;Initial Catalog=AllShows;Persist Security Info=False;User ID=Mitenka;Password=Sql11235!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+                .UseSqlServer(configuration.GetConnectionString("ShowsDatabase"));
         }
     }
 }

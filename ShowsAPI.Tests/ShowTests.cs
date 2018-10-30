@@ -17,9 +17,9 @@ namespace ShowsAPI.Tests
     {
         private const string ApiUrl = "http://show.azurewebsites.net/api/shows";
         private static readonly HttpClient Client = new HttpClient();
-        private readonly ILogger _logger;
+        private readonly ILogger<ShowsController> _logger;
 
-        public ShowTests(ILogger logger)
+        public ShowTests(ILogger<ShowsController> logger)
         {
             _logger = logger;
         }

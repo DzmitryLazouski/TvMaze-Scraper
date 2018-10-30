@@ -1,6 +1,4 @@
-﻿
-
-namespace Scraper.Data.DTO
+﻿namespace Scraper.Data.DTO
 {
     public class PersonDto
     {
