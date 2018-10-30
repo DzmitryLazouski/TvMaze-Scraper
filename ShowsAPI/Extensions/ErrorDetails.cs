@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace ShowsAPI.Models
+namespace ShowsAPI.Extensions
 {
     public class ErrorDetails
     {

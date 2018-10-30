@@ -8,7 +8,6 @@ using Moq;
 using NUnit.Framework;
 using Scraper.Data.Entities;
 using ShowsAPI.Controllers;
-using ShowsAPI.Models;
 using ShowsAPI.Pagination;
 using ShowsAPI.Persistence;
 

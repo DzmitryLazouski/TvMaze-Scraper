@@ -13,6 +13,7 @@ namespace Scraper.Scraping
         public int MinTimeDelay { get; set; }
         public int MaxTimeDelay { get; set; }
         public string ShowUrl { get; set; }
+        public string CastUrl { get; set; }
 
         public ScraperSettings GetScraperSettings()
         {
@@ -27,7 +28,8 @@ namespace Scraper.Scraping
                 MaxNotFoundErrorsBeforeBreak = int.Parse(configuration["MaxNotFoundErrosBeforeBreak"]),
                 MinTimeDelay = int.Parse(configuration["MinTimeDelay"]),
                 MaxTimeDelay = int.Parse(configuration["MaxTimeDelay"]),
-                ShowUrl = configuration["ShowUrl"]
+                ShowUrl = configuration["ShowUrl"],
+                CastUrl = configuration["CastUrl"]
             };
             return scraperSettings;
         }

@@ -14,15 +14,17 @@ namespace Scraper.Scraping
 {
     public class Scraper : IScraper
     {
-        public static int NotFoundCount { get; set; }
+        private int _notFoundErrorrsCount;
 
         private readonly ILogger<Scraper> _logger;
+        private readonly ShowsContext _context;
         private readonly HttpClient _client;
         private readonly ScraperSettings _scraperSettings;
 
-        public Scraper(ILoggerFactory loggerFactory, IHttpClientFactory clientFactory, IScraperSettings scraperSettings)
+        public Scraper(ILoggerFactory loggerFactory, ShowsContext context, IHttpClientFactory clientFactory, IScraperSettings scraperSettings)
         {
             _logger = loggerFactory.CreateLogger<Scraper>();
+            _context = context;
             _client = clientFactory.CreateClient("Scraper");
             _scraperSettings = scraperSettings.GetScraperSettings();
         }
@@ -31,13 +33,9 @@ namespace Scraper.Scraping
         {
             try
             {
-                int maxShowId;
-                using (var context = new ShowsContext())
-                {
-                    maxShowId = context.Show.Max(s => s.Id);
-                }
+                var maxShowId = _context.Show.Max(s => s.Id);
 
-                while(NotFoundCount < _scraperSettings.MaxNotFoundErrorsBeforeBreak)
+                while(_notFoundErrorrsCount < _scraperSettings.MaxNotFoundErrorsBeforeBreak)
                 {
                     var currentShowId = maxShowId + 1;
                     var showList = await DownloadShows(currentShowId, currentShowId + _scraperSettings.BatchSize);
@@ -58,7 +56,6 @@ namespace Scraper.Scraping
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
                 _logger.LogError(ex.Message);
                 _logger.LogError(ex.StackTrace);
             }
@@ -66,7 +63,8 @@ namespace Scraper.Scraping
 
         private async Task<List<string>> DownloadShows(int startShowId, int endShowId)
         {
-            NotFoundCount = 0;
+            _logger.LogInformation("Start Downloading Shows");
+            _notFoundErrorrsCount = 0;
             var showList = new List<string>();
             var rnd = new Random();
             for (var i = startShowId; i < endShowId; i++)
@@ -76,21 +74,21 @@ namespace Scraper.Scraping
                     var showId = i;
                     await Task.Factory.StartNew(async () =>
                     {
-                        var showUrl = $"http://api.tvmaze.com/shows/{showId}";
-                        Console.WriteLine(showUrl);
+                        var showUrl = $"{_scraperSettings.ShowUrl}{showId}";
                         _logger.LogInformation(showUrl);
 
                         var result = await _client.GetAsync(showUrl);
 
                         while (result.StatusCode == HttpStatusCode.TooManyRequests)
                         {
-                            await Task.Delay(TimeSpan.FromMilliseconds(rnd.Next(500, 550)));
+                            await Task.Delay(TimeSpan.FromMilliseconds(
+                                rnd.Next(_scraperSettings.MinTimeDelay, _scraperSettings.MaxTimeDelay)));
                             result = await _client.GetAsync(showUrl);
                         }
 
                         if (result.StatusCode == HttpStatusCode.NotFound)
                         {
-                            NotFoundCount++;
+                            _notFoundErrorrsCount++;
                         }
 
                         var show = await result.Content.ReadAsStringAsync();
@@ -101,10 +99,11 @@ namespace Scraper.Scraping
                         }
                     });
 
-                    if (NotFoundCount == 10)
+                    if (_notFoundErrorrsCount == _scraperSettings.MaxNotFoundErrorsBeforeBreak)
                         break;
 
-                    await Task.Delay(TimeSpan.FromMilliseconds(rnd.Next(500, 550)));
+                    await Task.Delay(TimeSpan.FromMilliseconds(
+                        rnd.Next(_scraperSettings.MinTimeDelay, _scraperSettings.MaxTimeDelay)));
                 }
                 catch (Exception ex)
                 {
@@ -116,7 +115,8 @@ namespace Scraper.Scraping
             return showList;
         }
 
-        private List<ShowDto> DeserializeShows(List<string> showsJson)
+        //TODO get rid of JsonConvert
+        private List<ShowDto> DeserializeShows(IEnumerable<string> showsJson)
         {
             var showObjList = new List<ShowDto>();
 
@@ -129,8 +129,7 @@ namespace Scraper.Scraping
             return showObjList;
         }
 
-
-        private async Task<List<CastDto>> DeserializeCasts(List<ShowDto> showsData)
+        private async Task<List<CastDto>> DeserializeCasts(IEnumerable<ShowDto> showsData)
         {
             var fullCastList = new List<CastDto>();
 
@@ -157,23 +156,26 @@ namespace Scraper.Scraping
 
         private async Task<string> DownloadCast(string id)
         {
-            // TODO
-            var castUrl = $"http://api.tvmaze.com/shows/{id}/cast";
-
-            Console.WriteLine(castUrl);
+            _logger.LogInformation("Start Downloading Cast");
+            var castUrl = GetCastUrl(id);
+            _logger.LogInformation(castUrl);
 
             var result = await _client.GetAsync(castUrl);
 
             if (result.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(500));
+                await Task.Delay(TimeSpan.FromMilliseconds(_scraperSettings.MinTimeDelay));
                 result = await _client.GetAsync(castUrl);
             }
 
             var cast = await result.Content.ReadAsStringAsync();
-            await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(500, 600)));
+            await Task.Delay(TimeSpan.FromMilliseconds(
+                new Random().Next(_scraperSettings.MinTimeDelay, _scraperSettings.MaxTimeDelay)));
             return cast;
         }
+
+        internal string GetCastUrl(string id)
+            => string.Format(_scraperSettings.CastUrl, id);
 
         private static (List<Show> shows, List<Person> people) GetShowsInfo(List<ShowDto> showDataList, List<CastDto> castDataList)
         {
@@ -208,22 +210,16 @@ namespace Scraper.Scraping
 
         private async Task SaveShows(IEnumerable<Show> shows)
         {
-            using (var db = new ShowsContext())
-            {
-                await db.Show.AddRangeAsync(shows);
-                await db.SaveChangesAsync();
-            }
+            await _context.Show.AddRangeAsync(shows);
+            await _context.SaveChangesAsync();
         }
 
         private async Task SavePeople(IEnumerable<Person> peopleList)
         {
             foreach (var item in peopleList)
             {
-                using (var newContext = new ShowsContext())
-                {
-                    await newContext.Actor.AddAsync(item);
-                    await newContext.SaveChangesAsync();
-                }
+                await _context.Actor.AddAsync(item);
+                await _context.SaveChangesAsync();
             }
         }
     }
