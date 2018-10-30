@@ -9,13 +9,6 @@ namespace Scraper.Contexts
 {
     public sealed class ShowsContext : DbContext
     {
-        public static readonly LoggerFactory MyConsoleLoggerFactory =
-            new LoggerFactory(new[]
-            {
-                new ConsoleLoggerProvider(
-                    (category, level) =>
-                        category == DbLoggerCategory.Database.Command.Name && level == LogLevel.Information, true)
-            });
         public ShowsContext()
         {
             Database.EnsureCreated();
@@ -33,7 +26,6 @@ namespace Scraper.Contexts
 
             optionsBuilder.EnableSensitiveDataLogging();
             optionsBuilder
-                .UseLoggerFactory(MyConsoleLoggerFactory)
                 .UseSqlServer(configuration.GetConnectionString("ShowsDatabase"));
         }
     }

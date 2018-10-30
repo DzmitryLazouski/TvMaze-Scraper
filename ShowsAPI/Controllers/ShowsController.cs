@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Scraper.Data.Entities;
 using Scraper.Data.Models;
-using ShowsAPI.Pagination;
 using ShowsAPI.Persistence;
-using StackExchange.Redis;
 
 namespace ShowsAPI.Controllers
 {
@@ -20,55 +16,28 @@ namespace ShowsAPI.Controllers
     {
         private readonly ILogger _logger;
         private readonly IShowsRepository _showsRepository;
-        private readonly IDatabase _cache;
         private readonly IMapper _mapper;
 
         public ShowsController(IShowsRepository showsRepository, ILogger<ShowsController> logger, IMapper mapper)
         {
             _logger = logger;
             _showsRepository = showsRepository;
-            _cache = Program.Connection.GetDatabase();
             _mapper = mapper;
         }
         // GET: api/<controller>
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]PaginationParameterModel paginationParameterModel)
+        public async Task<IActionResult> Get([FromQuery]int pageSize = 5, [FromQuery]int pageNumber = 1)
         {
-            var shows = _showsRepository.GetAll();
+            var itemsOnPage = await _showsRepository.GetAll()
+                .Skip(pageSize * (pageNumber - 1))
+                .Take(pageSize)
+                .ToListAsync();
 
-            var currentPage = paginationParameterModel.PageNumber;
-            var pageSize = paginationParameterModel.PageSize;
+            OrderCastByBirthdayDesc(itemsOnPage);
 
-            var showItems = shows.Skip((currentPage - 1) * pageSize)
-                             .Take(pageSize).ToList();
+            _logger.LogInformation($"There are {itemsOnPage.Count} shows on page");
 
-            if (showItems.Count == 0)
-            {
-                _logger.LogInformation("No shows were found");
-                return NotFound();
-            }
-
-            var key = $"ShowsCount on {DateTime.Now.ToShortDateString()}";
-            var showsCountString = await _cache.StringGetAsync(key);
-            int showsCount;
-            if (string.IsNullOrEmpty(showsCountString))
-            {
-                showsCount = await shows.CountAsync();
-                _logger.LogInformation($"There are {showsCount} shows in db.");
-                await _cache.StringSetAsync(key, showsCount);
-            }
-            else
-            {
-                showsCountString.TryParse(out showsCount);
-                _logger.LogInformation($"Number of shows = {showsCount} from Redis.");
-            }
-
-            HttpContext?.Response.Headers.Add("Paging-Headers",
-                JsonConvert.SerializeObject(paginationParameterModel.GetPaginationMetadata(showsCount)));
-
-            OrderCastByBirthdayDesc(showItems);
-
-            return Ok(_mapper.Map<List<Show>, List<ShowModel>>(showItems));
+            return Ok(_mapper.Map<List<Show>, List<ShowModel>>(itemsOnPage));
         }
 
         private static void OrderCastByBirthdayDesc(IEnumerable<Show> showItems)

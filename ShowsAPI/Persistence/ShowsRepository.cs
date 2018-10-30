@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Scraper.Data.Entities;
@@ -16,10 +17,5 @@ namespace ShowsAPI.Persistence
 
         public IQueryable<Show> GetAll()
             => _showsContext.Show.Include(s => s.Cast);
-
-
-        public async Task<Show> GetBy(int id)
-            => await _showsContext.Show.Where(s => s.Id == id)
-                .Include(x => x.Cast).FirstOrDefaultAsync();
     }
 }
