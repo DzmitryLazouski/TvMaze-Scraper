@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Scraper.Scraping;
@@ -11,6 +13,7 @@ namespace Scraper
         {
             var serviceProvider = new ServiceCollection()
                 .AddLogging()
+                .AddSingleton<IScraperSettings, ScraperSettings>()
                 .AddSingleton<IScraper, Scraping.Scraper>()
                 .AddHttpClient()
                 .BuildServiceProvider();

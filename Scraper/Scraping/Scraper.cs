@@ -15,29 +15,32 @@ namespace Scraper.Scraping
     public class Scraper : IScraper
     {
         public static int NotFoundCount { get; set; }
+
         private readonly ILogger<Scraper> _logger;
         private readonly HttpClient _client;
+        private readonly ScraperSettings _scraperSettings;
 
-        public Scraper(ILoggerFactory loggerFactory, IHttpClientFactory clientFactory)
+        public Scraper(ILoggerFactory loggerFactory, IHttpClientFactory clientFactory, IScraperSettings scraperSettings)
         {
             _logger = loggerFactory.CreateLogger<Scraper>();
             _client = clientFactory.CreateClient("Scraper");
+            _scraperSettings = scraperSettings.GetScraperSettings();
         }
 
         public async Task Scrape()
         {
             try
             {
-                const int batchSize = 1000;
                 int maxShowId;
                 using (var context = new ShowsContext())
                 {
                     maxShowId = context.Show.Max(s => s.Id);
                 }
 
-                for (var i = maxShowId + 1; NotFoundCount != 10; i += batchSize)
+                while(NotFoundCount < _scraperSettings.MaxNotFoundErrorsBeforeBreak)
                 {
-                    var showList = await DownloadShows(i, i + batchSize);
+                    var currentShowId = maxShowId + 1;
+                    var showList = await DownloadShows(currentShowId, currentShowId + _scraperSettings.BatchSize);
                     var showDataList = DeserializeShows(showList);
                     var castDataList = await DeserializeCasts(showDataList);
                     var (shows, people) = GetShowsInfo(showDataList, castDataList);
@@ -154,6 +157,7 @@ namespace Scraper.Scraping
 
         private async Task<string> DownloadCast(string id)
         {
+            // TODO
             var castUrl = $"http://api.tvmaze.com/shows/{id}/cast";
 
             Console.WriteLine(castUrl);
